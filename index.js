@@ -76,6 +76,39 @@ class Observable {
       return subscription;
     });
   }
+
+  static concat(...observables) {
+    return new Observable(function subscribe(observer) {
+      let myObserbables = observables.slice();
+      let subscription = null;
+
+      const processObservable = () => {
+        if (myObserbables.length == 0) {
+          observer.complete();
+        } else {
+          let observable = observables.shift();
+          subscription = myObserbables.subscribe({
+            next(v) {
+              observer.next(v);
+            },
+            error(err) {
+              observer.error(err);
+              subscription.unsubscribe();
+            },
+            complete() {
+              processObservable();
+            },
+          });
+        }
+      };
+      processObservable();
+      return {
+        unsubscribe() {
+          subscription.unsubscribe();
+        },
+      };
+    });
+  }
 }
 
 const btn = document.getElementById("btn");
