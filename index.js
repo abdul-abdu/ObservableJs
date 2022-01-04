@@ -37,6 +37,33 @@ class Observable {
     });
   }
 
+  retry(num) {
+    const self = this;
+    return new Observable(function subscribe(observer) {
+      const subscription = self.subscribe({
+        next(v) {
+          observer.next(v);
+        },
+        complete() {
+          observer.complete();
+        },
+        error(e) {
+          if (num == 0) {
+            observer.error(e);
+          } else {
+            self.retry(num - 1);
+          }
+        },
+      });
+
+      return {
+        unsubscribe: () => {
+          subscription.unsubscribe();
+        },
+      };
+    });
+  }
+
   map(projection) {
     const self = this;
     return new Observable(function subscribe(observer) {
